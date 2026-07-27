@@ -101,17 +101,51 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      const width = video.videoWidth || 1280;
-      const height = video.videoHeight || 720;
-      canvas.width = width; canvas.height = height;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (!vw || !vh) return;
       const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-        setPreviewImage(dataUrl); setCameraState('captured'); stopStream(); onCapture(dataUrl);
+      if (!ctx) return;
+
+      if (overlayType === 'id_card') {
+        const vr = video.getBoundingClientRect();
+        const displayW = vr.width;
+        const displayH = vr.height;
+
+        const scale = Math.max(displayW / vw, displayH / vh);
+        const vidDisplayW = vw * scale;
+        const vidDisplayH = vh * scale;
+        const offsetX = (displayW - vidDisplayW) / 2;
+        const offsetY = (displayH - vidDisplayH) / 2;
+
+        const frameDisplayW = Math.min(displayW * 0.85, 340);
+        const frameDisplayH = frameDisplayW / (85.6 / 53.9);
+        const frameDisplayX = (displayW - frameDisplayW) / 2;
+        const frameDisplayY = (displayH - frameDisplayH) / 2;
+
+        let srcX = (frameDisplayX - offsetX) / scale;
+        let srcY = (frameDisplayY - offsetY) / scale;
+        let srcW = frameDisplayW / scale;
+        let srcH = frameDisplayH / scale;
+
+        srcX = Math.max(0, srcX);
+        srcY = Math.max(0, srcY);
+        srcW = Math.min(srcW, vw - srcX);
+        srcH = Math.min(srcH, vh - srcY);
+
+        canvas.width = Math.round(srcW);
+        canvas.height = Math.round(srcH);
+        ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+      } else {
+        canvas.width = vw;
+        canvas.height = vh;
+        ctx.drawImage(video, 0, 0, vw, vh);
       }
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      setPreviewImage(dataUrl); setCameraState('captured'); stopStream(); onCapture(dataUrl);
     }
-  }, [onCapture, stopStream]);
+  }, [onCapture, stopStream, overlayType]);
 
   const startLiveness = useCallback(() => {
     const challenge = pickRandomChallenge();
