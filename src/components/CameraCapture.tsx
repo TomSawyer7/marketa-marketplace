@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Camera, RotateCcw, Check, RefreshCw, ShieldAlert, Eye, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { Camera, RotateCcw, Check, RefreshCw, ShieldAlert, Eye, ArrowLeft, ArrowRight, Loader2, Upload } from 'lucide-react';
 import { runLivenessCheck, pickRandomChallenge, getChallengeInstruction, MAX_ATTEMPTS } from '../lib/livenessDetection';
 import type { LivenessChallenge, LivenessResult } from '../lib/livenessDetection';
 
@@ -29,6 +29,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const stopStream = useCallback(() => {
     if (streamRef.current) { streamRef.current.getTracks().forEach((track) => track.stop()); streamRef.current = null; }
@@ -42,11 +43,26 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         setCameraState('no-camera-found'); setErrorMessage('Camera access is not supported by this browser.'); return;
       }
       const videoMode = overlayType === 'id_card' ? 'environment' : 'user';
-      const constraints: MediaStreamConstraints = {
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: videoMode },
-        audio: false
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: videoMode },
+          audio: false
+        });
+      } catch (firstErr: any) {
+        if (firstErr.name === 'OverconstrainedError' || firstErr.name === 'ConstraintNotSatisfiedError') {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: videoMode },
+              audio: false
+            });
+          } catch {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
+        } else {
+          throw firstErr;
+        }
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -55,29 +71,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       } else { setCameraState('live'); }
     } catch (err: any) {
       console.error('Camera initialization error:', err);
-      if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
-        try {
-          const videoMode = overlayType === 'id_card' ? 'environment' : 'user';
-          const fallbackStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: videoMode }, audio: false
-          });
-          streamRef.current = fallbackStream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = fallbackStream;
-            await videoRef.current.play();
-            setCameraState('live'); return;
-          }
-        } catch (fallbackErr: any) {
-          setCameraState('permission-denied');
-          setErrorMessage(`Camera unavailable: ${fallbackErr.message || 'Could not start camera'}`);
-          return;
-        }
-      }
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setCameraState('permission-denied'); setErrorMessage('Camera access was denied. Please allow camera permissions in browser settings.');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         setCameraState('no-camera-found'); setErrorMessage('No camera device was detected on your hardware.');
-      } else if (err.name !== 'OverconstrainedError' && err.name !== 'ConstraintNotSatisfiedError') {
+      } else {
         setCameraState('permission-denied'); setErrorMessage(`Unable to access camera: ${err.message || 'Unknown error'}`);
       }
     }
@@ -87,6 +85,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     if (!capturedImage) { startCamera(); } else { setCameraState('captured'); setPreviewImage(capturedImage); }
     return () => { stopStream(); if (abortRef.current) abortRef.current.abort(); };
   }, [capturedImage, startCamera, stopStream]);
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPreviewImage(dataUrl); setCameraState('captured'); onCapture(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }, [onCapture]);
 
   const handleCapture = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
@@ -144,6 +153,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   }, [cameraState, enableLiveness, overlayType, startLiveness]);
 
   const handleRetakeClick = () => {
+    stopStream();
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     setPreviewImage(null); setLivenessAttempts(0); setLivenessMessage('');
     if (onRetake) onRetake();
@@ -193,10 +203,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <h4 className="text-sm font-bold text-red-600">Camera Access Unavailable</h4>
               <p className="text-xs text-slate-500 leading-relaxed">{errorMessage}</p>
             </div>
-            <button type="button" onClick={startCamera}
-              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
-              <RefreshCw className="w-3.5 h-3.5" /> Retry Camera Access
-            </button>
+            <div className="flex flex-col items-center gap-3">
+              <button type="button" onClick={startCamera}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                <RefreshCw className="w-3.5 h-3.5" /> Try Re-enabling Camera
+              </button>
+              <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">or</span>
+              <label className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                <Upload className="w-3.5 h-3.5" /> Upload Photo Instead
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+              </label>
+            </div>
           </div>
         ) : cameraState === 'liveness-failed' ? (
           <div className="p-8 text-center space-y-4 max-w-md">
