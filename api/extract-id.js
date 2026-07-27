@@ -75,9 +75,9 @@ export default async function handler(req, res) {
   }
 
   // --- Build ID Analyzer v2 request ---
-  const apiKey = process.env.IDANALYZER_API_KEY;
+  const apiKey = process.env.ID_ANALYZER_API_KEY || process.env.IDANALYZER_API_KEY;
   if (!apiKey) {
-    console.error('[extract-id] IDANALYZER_API_KEY is not set');
+    console.error('[extract-id] ID_ANALYZER_API_KEY / IDANALYZER_API_KEY is not set');
     json(res, 500, { error: 'Server misconfiguration: API key not found' });
     return;
   }
