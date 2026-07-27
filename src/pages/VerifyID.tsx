@@ -14,7 +14,8 @@ import {
 import { store } from '../lib/supabase';
 import type { Profile, NationalIdFields } from '../types/marketplace';
 import { compareFaces, type MatchResult } from '../lib/faceVerification';
-import { extractIdFields, type OcrExtractionResult } from '../lib/ocrExtraction';
+import { extractIdFields } from '../lib/ocrExtraction';
+import type { OcrExtractionResult } from '../lib/ocrExtraction';
 import { CameraCapture } from '../components/CameraCapture';
 import type { LivenessResult } from '../lib/livenessDetection';
 import { extractQrFromImage } from '../lib/qrExtraction';
@@ -116,7 +117,10 @@ export const VerifyID: React.FC = () => {
       setIsExtractingOcr(true);
       setStep(3);
       try {
-        const ocrResult: OcrExtractionResult = await extractIdFields(idFrontImage || dataUrl);
+        const ocrResult: OcrExtractionResult = await extractIdFields(
+          idFrontImage || dataUrl,
+          idFrontImage ? { backImage: dataUrl } : undefined
+        );
         setOcrRawText(ocrResult.rawText);
         setOcrConfidence(ocrResult.confidence);
 

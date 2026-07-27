@@ -1,0 +1,10 @@
+{
+  "devCommand": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs@22.x"
+    }
+  }
+}
