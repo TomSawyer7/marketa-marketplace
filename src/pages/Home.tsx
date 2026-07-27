@@ -100,7 +100,7 @@ export const Home: React.FC<HomeProps> = ({
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
-              <span className="text-slate-400 font-medium">$</span>
+              <span className="text-slate-400 font-medium">₱</span>
               <input
                 type="number"
                 placeholder="Min"
@@ -109,7 +109,7 @@ export const Home: React.FC<HomeProps> = ({
                 className="w-14 bg-transparent text-slate-700 placeholder-slate-400 focus:outline-none"
               />
               <span className="text-slate-300">-</span>
-              <span className="text-slate-400 font-medium">$</span>
+              <span className="text-slate-400 font-medium">₱</span>
               <input
                 type="number"
                 placeholder="Max"

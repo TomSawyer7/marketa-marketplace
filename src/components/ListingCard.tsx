@@ -42,7 +42,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser }
         </span>
         <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-0.5 rounded border border-slate-200">
           <span className="text-sm font-bold text-slate-900">
-            ${listing.price.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+            ₱{listing.price.toLocaleString('en-US', { minimumFractionDigits: 0 })}
           </span>
         </div>
         {listing.status !== 'active' && (

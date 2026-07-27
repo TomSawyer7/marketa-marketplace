@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, CheckCircle2, UserCheck, MapPin, Clock, DollarSign, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, MessageSquare, CheckCircle2, UserCheck, MapPin, Clock, ShoppingBag } from 'lucide-react';
 import { store } from '../lib/supabase';
 import type { Profile, Listing, Conversation } from '../types/marketplace';
 import { toast } from 'sonner';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 export const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -109,7 +111,7 @@ export const ListingDetail: React.FC = () => {
                   <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {new Date(listing.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
-              <div className="text-3xl font-black text-primary">${listing.price}</div>
+              <div className="text-3xl font-black text-primary">₱{listing.price.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -131,6 +133,21 @@ export const ListingDetail: React.FC = () => {
               <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">{listing.description}</p>
             </div>
 
+            {listing.latitude && listing.longitude && (
+              <div>
+                <h3 className="font-bold text-slate-900 mb-2">Location</h3>
+                <div className="rounded-lg overflow-hidden border border-slate-200 h-[200px]">
+                  <MapContainer center={[listing.latitude, listing.longitude]} zoom={14} className="h-full w-full" scrollWheelZoom={false} dragging={false} zoomControl={false}>
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={[listing.latitude, listing.longitude]} />
+                  </MapContainer>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-200">
               {!isSeller && currentUser.id && (
                 <button onClick={handleMessageSeller} className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg text-sm transition flex items-center gap-2 cursor-pointer">
@@ -140,7 +157,7 @@ export const ListingDetail: React.FC = () => {
 
               {isSeller && !hasSold && listing.status === 'active' && (
                 <button onClick={() => setShowSoldModal(true)} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-sm transition flex items-center gap-2 cursor-pointer">
-                  <DollarSign className="w-4 h-4" /> Mark as Sold
+                  <CheckCircle2 className="w-4 h-4" /> Mark as Sold
                 </button>
               )}
             </div>

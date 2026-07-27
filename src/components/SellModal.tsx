@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Upload, DollarSign, MapPin, Tag, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, Tag, FileText, Image as ImageIcon } from 'lucide-react';
 import type { Category, Profile } from '../types/marketplace';
 import { store } from '../lib/supabase';
 import { toast } from 'sonner';
+import { LocationPicker } from './LocationPicker';
 
 interface SellModalProps {
   isOpen: boolean;
@@ -17,7 +18,9 @@ export const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentUs
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState<Category>('Electronics');
-  const [location, setLocation] = useState('Seattle, WA');
+  const [location, setLocation] = useState('');
+  const [locationLat, setLocationLat] = useState<number | undefined>();
+  const [locationLng, setLocationLng] = useState<number | undefined>();
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [previewFile, setPreviewFile] = useState<string | null>(null);
@@ -46,12 +49,19 @@ export const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentUs
     const finalImage = previewFile || imageUrl || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&auto=format&fit=crop&q=80';
     store.addListing({
       title: title.trim(), description: description.trim(), price: parseFloat(price),
-      category, location: location.trim() || 'Seattle, WA', image_url: finalImage, seller_id: currentUser.id
+      category, location: location.trim() || 'Philippines', image_url: finalImage, seller_id: currentUser.id,
+      latitude: locationLat ?? null, longitude: locationLng ?? null
     });
     toast.success('Item Listed Successfully!', { description: 'Your item is now live on Marketa Marketplace.' });
     setTitle(''); setPrice(''); setDescription(''); setImageUrl(''); setPreviewFile(null);
     if (onSuccess) onSuccess();
     onClose();
+  };
+
+  const handleLocationChange = (address: string, lat?: number, lng?: number) => {
+    setLocation(address);
+    setLocationLat(lat);
+    setLocationLng(lng);
   };
 
   const inputCls = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition';
@@ -80,9 +90,9 @@ export const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentUs
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Price ($ USD) *</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Price (₱) *</label>
               <div className="relative">
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">₱</span>
                 <input type="number" min="0" step="0.01" required placeholder="0.00" value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition" />
@@ -99,12 +109,7 @@ export const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentUs
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Location / City</label>
-            <div className="relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input type="text" placeholder="e.g. Seattle, WA" value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary transition" />
-            </div>
+            <LocationPicker value={location} onLocationChange={handleLocationChange} />
           </div>
 
           <div className="space-y-2">

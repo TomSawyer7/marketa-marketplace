@@ -274,7 +274,7 @@ export const Inbox: React.FC = () => {
                     {selectedConv.listing?.title}
                   </h3>
                   <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                    ${selectedConv.listing?.price}
+                    ₱{selectedConv.listing?.price}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">

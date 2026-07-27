@@ -984,7 +984,9 @@ export async function syncProfilesFromSupabase(): Promise<void> {
           id_back_url: row.id_back_url ?? undefined,
           selfie_url: row.selfie_url ?? undefined,
           face_match_score: row.face_match_score ?? undefined,
-          face_match_status: (row.face_match_status ?? 'not_run') as FaceMatchStatus
+          face_match_status: (row.face_match_status ?? 'not_run') as FaceMatchStatus,
+          location: row.location ?? undefined,
+          bio: row.bio ?? undefined
         };
         store.upsertUser(profile);
       }

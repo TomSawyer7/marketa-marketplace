@@ -99,7 +99,7 @@ export const Transactions: React.FC = () => {
                 <img src={conv.listing?.image_url} alt="" className="w-16 h-16 rounded-xl object-cover border border-slate-200" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-slate-900 text-sm truncate">{conv.listing?.title}</h3>
-                  <p className="text-xs text-slate-500">Seller: {conv.seller?.full_name} — ${conv.listing?.price}</p>
+                  <p className="text-xs text-slate-500">Seller: {conv.seller?.full_name} — ₱{conv.listing?.price}</p>
                 </div>
                 <button onClick={() => handleConfirm(conv)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" /> Confirm Purchase

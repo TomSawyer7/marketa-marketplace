@@ -49,6 +49,9 @@ export interface Profile {
   everify_notes?: string | null;
   is_restricted?: boolean;
   restriction_reason?: string | null;
+  location?: string;
+  bio?: string;
+  buyer_id?: string;
 }
 
 export interface Listing {
@@ -64,6 +67,8 @@ export interface Listing {
   status: ListingStatus;
   buyer_id?: string | null;
   created_at: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Conversation {

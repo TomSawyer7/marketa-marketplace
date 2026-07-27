@@ -12,7 +12,7 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ currentUser }) => {
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalTab, setAuthModalTab] = useState<'signup' | 'login'>('signup');
+  const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signup');
   const [searchQuery, setSearchQuery] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,13 +40,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentUser }) => {
     }
   };
 
-  const handleOpenLogin = () => {
-    setAuthModalTab('login');
+  const handleOpenSignup = () => {
+    setAuthModalTab('signup');
     setIsAuthModalOpen(true);
   };
 
-  const handleOpenSignup = () => {
-    setAuthModalTab('signup');
+  const handleOpenSignin = () => {
+    setAuthModalTab('signin');
     setIsAuthModalOpen(true);
   };
 
@@ -101,7 +101,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentUser }) => {
                 Sign up
               </button>
               <button
-                onClick={handleOpenLogin}
+                onClick={handleOpenSignin}
                 className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition cursor-pointer"
               >
                 Log in
@@ -208,7 +208,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ currentUser }) => {
                   <div className="relative aspect-square overflow-hidden bg-slate-100">
                     <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     <div className="absolute top-2 left-2 bg-white/90 backdrop-blur text-slate-900 text-xs font-bold px-2 py-0.5 rounded shadow-sm">
-                      ${item.price}
+                      ₱{item.price}
                     </div>
                   </div>
                   <div className="p-3 space-y-1">

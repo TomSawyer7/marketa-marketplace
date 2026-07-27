@@ -59,6 +59,9 @@ export const VerifyID: React.FC = () => {
           nationality: currentUser.ocr_fields?.nationality || ''
   });
 
+  // Post-submission state
+  const [submitted, setSubmitted] = useState(false);
+
   // Face Matching State
   const [isComparing, setIsComparing] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(
@@ -201,6 +204,7 @@ export const VerifyID: React.FC = () => {
         verificationStatus: 'pending'
       });
 
+      setSubmitted(true);
       toast.info('Verification Submitted for Admin Review', {
         description: 'Your ID has been submitted. An admin will review and approve it.'
       });
@@ -208,53 +212,6 @@ export const VerifyID: React.FC = () => {
       toast.error('Verification error');
     } finally {
       setIsComparing(false);
-    }
-  };
-
-  const renderStatusBanner = (status: string) => {
-    switch (status) {
-      case 'verified':
-        return (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center space-y-3">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600 border border-emerald-200">
-              <ShieldCheck className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-emerald-700">National ID Verified ✓</h2>
-            <p className="text-slate-600 text-sm max-w-md mx-auto">
-              Your ID and selfie photos passed verification.
-            </p>
-            <div className="pt-2 flex justify-center gap-3">
-              <button
-                onClick={() => navigate('/')}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
-              >
-                Browse Marketplace
-              </button>
-            </div>
-          </div>
-        );
-      case 'pending':
-        return (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center space-y-3">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 border border-amber-200 animate-pulse">
-              <Clock className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-amber-700">Under Compliance Admin Review</h2>
-            <p className="text-slate-600 text-sm max-w-md mx-auto">
-              Your ID requires manual review by an admin before approval.
-            </p>
-            <div className="pt-3">
-              <button
-                onClick={() => navigate('/admin')}
-                className="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition cursor-pointer"
-              >
-                View in Admin Portal
-              </button>
-            </div>
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
@@ -282,9 +239,27 @@ export const VerifyID: React.FC = () => {
           </p>
         </div>
 
-        {/* Current Verified / Pending Banner */}
-        {renderStatusBanner(currentUser.verification_status)}
-
+        {/* Pending / submitted → show confirmation, hide flow */}
+        {(submitted || currentUser.verification_status === 'pending') ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 border border-amber-200 animate-pulse">
+              <Clock className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-bold text-amber-700">Verification Submitted</h2>
+            <p className="text-slate-600 text-sm max-w-md mx-auto">
+              Please wait while an admin reviews your ID. You'll be notified once it's approved.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={() => navigate('/')}
+                className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg text-sm transition cursor-pointer"
+              >
+                Return to Home
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* STEPPER PROGRESS BAR */}
         <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-between gap-1 text-[11px] sm:text-xs font-bold text-slate-500 overflow-x-auto">
           <div className={`flex items-center gap-1.5 whitespace-nowrap ${step >= 1 ? 'text-primary' : ''}`}>
@@ -695,6 +670,8 @@ export const VerifyID: React.FC = () => {
               </div>
             ) : null}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

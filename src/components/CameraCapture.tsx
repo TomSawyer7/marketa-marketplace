@@ -41,7 +41,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraState('no-camera-found'); setErrorMessage('Camera access is not supported by this browser.'); return;
       }
-      const constraints: MediaStreamConstraints = { video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }, audio: false };
+      const videoMode = overlayType === 'id_card' ? 'environment' : 'user';
+      const constraints: MediaStreamConstraints = {
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: videoMode },
+        audio: false
+      };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
       if (videoRef.current) {
@@ -51,15 +55,33 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       } else { setCameraState('live'); }
     } catch (err: any) {
       console.error('Camera initialization error:', err);
+      if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+        try {
+          const videoMode = overlayType === 'id_card' ? 'environment' : 'user';
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: videoMode }, audio: false
+          });
+          streamRef.current = fallbackStream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = fallbackStream;
+            await videoRef.current.play();
+            setCameraState('live'); return;
+          }
+        } catch (fallbackErr: any) {
+          setCameraState('permission-denied');
+          setErrorMessage(`Camera unavailable: ${fallbackErr.message || 'Could not start camera'}`);
+          return;
+        }
+      }
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setCameraState('permission-denied'); setErrorMessage('Camera access was denied. Please allow camera permissions in browser settings.');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         setCameraState('no-camera-found'); setErrorMessage('No camera device was detected on your hardware.');
-      } else {
+      } else if (err.name !== 'OverconstrainedError' && err.name !== 'ConstraintNotSatisfiedError') {
         setCameraState('permission-denied'); setErrorMessage(`Unable to access camera: ${err.message || 'Unknown error'}`);
       }
     }
-  }, [stopStream]);
+  }, [stopStream, overlayType]);
 
   useEffect(() => {
     if (!capturedImage) { startCamera(); } else { setCameraState('captured'); setPreviewImage(capturedImage); }

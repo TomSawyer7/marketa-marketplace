@@ -11,6 +11,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import { ListingDetail } from './pages/ListingDetail';
 import { Transactions } from './pages/Transactions';
 import { ProfilePage } from './pages/ProfilePage';
+import { AccountSettings } from './pages/AccountSettings';
 import { RestrictionBanner } from './components/RestrictionBanner';
 import { store, supabase, initAuthListener } from './lib/supabase';
 import type { Category, Profile, FaceMatchStatus } from './types/marketplace';
@@ -56,7 +57,9 @@ export function App() {
               id_back_url: data.id_back_url ?? undefined,
               selfie_url: data.selfie_url ?? undefined,
               face_match_score: data.face_match_score ?? undefined,
-              face_match_status: (data.face_match_status ?? 'not_run') as FaceMatchStatus
+              face_match_status: (data.face_match_status ?? 'not_run') as FaceMatchStatus,
+              location: data.location ?? undefined,
+              bio: data.bio ?? undefined
             });
           }
         }
@@ -207,6 +210,27 @@ export function App() {
           />
 
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route
+            path="/account-settings"
+            element={
+              isVerified ? (
+                <>
+                  <Navbar
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                  />
+                  <div className="flex-1">
+                    <AccountSettings />
+                  </div>
+                </>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
           <Route
             path="/admin"
